@@ -129,7 +129,7 @@ namespace Kinecursor
 
             if (null == this.sensor)
             {
-                MessageBox.Show("No Kinect Found.. :(");
+                MessageBox.Show("No Ready Kinect Found.. :(");
             }
         }
 
@@ -192,41 +192,39 @@ namespace Kinecursor
 
             if (skeletons.Length != 0)
             {
-                foreach (Skeleton skel in skeletons)
+                Skeleton skel = (from s in skeletons
+                                 where s.TrackingState == SkeletonTrackingState.Tracked
+                                 select s).FirstOrDefault();
+                if (null == skel) { return; }
+
+                if (skel.TrackingState == SkeletonTrackingState.Tracked)
                 {
+                    Joint jointHandLeft = skel.Joints[JointType.HandLeft];
+                    Joint jointHandRight = skel.Joints[JointType.HandRight];
+                    Joint jointShoulderCenter = skel.Joints[JointType.ShoulderCenter];
 
-                    if (skel.TrackingState == SkeletonTrackingState.Tracked)
+                    if (jointHandRight.Position.Z - jointShoulderCenter.Position.Z < -0.3)
                     {
-                        Joint jointHandLeft = skel.Joints[JointType.HandLeft];
-                        Joint jointHandRight = skel.Joints[JointType.HandRight];
-                        Joint jointShoulderCenter = skel.Joints[JointType.ShoulderCenter];
-
-                        //tbInfo.Text = (jointHandRight.Position.Z - jointShoulderCenter.Position.Z).ToString();
-                        //tbInfo.Text = (jointHandLeft.Position.Z - jointShoulderCenter.Position.Z).ToString();
-
-                        if (jointHandRight.Position.Z - jointShoulderCenter.Position.Z < -0.3)
-                        {
-                            float x = jointHandRight.Position.X - jointShoulderCenter.Position.X;//hX - sX;
-                            float y = jointShoulderCenter.Position.Y - jointHandRight.Position.Y;//sY - hY;
-                            handReady = true;
-                            SetCursorPos((int)((x + 0.05) / 0.35 * screenWidth), (int)(y / 0.35 * screenHeight));
-                        }
-                        else if (jointHandLeft.Position.Z - jointShoulderCenter.Position.Z < -0.3)
-                        {
-
-                            float x = jointHandLeft.Position.X - jointShoulderCenter.Position.X;//hX - sX;
-                            float y = jointShoulderCenter.Position.Y - jointHandLeft.Position.Y;//sY - hY;
-                            handReady = true;
-                            SetCursorPos((int)((x + 0.3) / 0.35 * screenWidth), (int)(y / 0.35 * screenHeight));
-                        }
-                        else
-                        {
-                            handReady = false;
-                        }
-
-                        tbInfo.Text = "Fist: "+isMakingAFist.ToString();
+                        float x = jointHandRight.Position.X - jointShoulderCenter.Position.X;//hX - sX;
+                        float y = jointShoulderCenter.Position.Y - jointHandRight.Position.Y;//sY - hY;
+                        handReady = true;
+                        SetCursorPos((int)((x + 0.05) / 0.35 * screenWidth), (int)(y / 0.35 * screenHeight));
                     }
+                    else if (jointHandLeft.Position.Z - jointShoulderCenter.Position.Z < -0.3)
+                    {
+                        float x = jointHandLeft.Position.X - jointShoulderCenter.Position.X;//hX - sX;
+                        float y = jointShoulderCenter.Position.Y - jointHandLeft.Position.Y;//sY - hY;
+                        handReady = true;
+                        SetCursorPos((int)((x + 0.3) / 0.35 * screenWidth), (int)(y / 0.35 * screenHeight));
+                    }
+                    else
+                    {
+                        handReady = false;
+                    }
+
+                    tbInfo.Text = "Fist: "+isMakingAFist.ToString();
                 }
+                
             }
 
         }
